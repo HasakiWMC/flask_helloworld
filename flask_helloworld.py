@@ -1,6 +1,18 @@
+#!usr/bin/env python
+# -*- coding:utf-8 _*-
+
 from flask import Flask, render_template
+from werkzeug.routing import BaseConverter
+
+
+class RegexConverter(BaseConverter):
+    def __init__(self, url_map, *items):
+        super(RegexConverter, self).__init__(url_map)
+        self.regex = items[0]
+
 
 app = Flask(__name__)
+app.url_map.converters['regex'] = RegexConverter
 
 
 @app.route('/')
@@ -18,10 +30,15 @@ def about():
     return 'About'
 
 
-# int float path路由转换器
+# int float path 路由转换器
 @app.route('/user/<int:user_id>')
 def user(user_id):
     return 'User %s' % user_id
+
+
+@app.route('/regex/<regex("[a-z]{3}"):user_reg>')
+def regex(user_reg):
+    return 'User %s' % user_reg
 
 
 if __name__ == '__main__':
