@@ -1,8 +1,10 @@
 #!usr/bin/env python
 # -*- coding:utf-8 _*-
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for, make_response, abort
 from werkzeug.routing import BaseConverter
+from os import path
+from werkzeug.utils import secure_filename
 
 
 class RegexConverter(BaseConverter):
@@ -16,8 +18,12 @@ app.url_map.converters['regex'] = RegexConverter
 
 
 @app.route('/')
-def hello_world():
-    return render_template('index.html', title='Flask Hello World')
+def index():
+    # abort(404)
+    # request.cookies[''] 读cookie
+    response = make_response(render_template('index.html', title='Flask Hello World'))
+    response.set_cookie('username', '')
+    return response
 
 
 @app.route('/services')
@@ -39,6 +45,42 @@ def user(user_id):
 @app.route('/regex/<regex("[a-z]{3}"):user_reg>')
 def regex(user_reg):
     return 'User %s' % user_reg
+
+
+# 多个url指向同一个view
+@app.route('/projects/')
+@app.route('/our-works/')
+def projects():
+    return 'The project page'
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        # html请求发送时填入的值会自动包装成字典发送到服务端
+        # debug=True时会有一个track跟踪页，没有debug=True直接404
+        username = request.form['username']
+        password = request.form['password']
+    else:
+        username = request.args['username']
+    return render_template('login.html', method=request.method)
+
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload():
+    if request.method == 'POST':
+        f = request.files['file']
+        basepath = path.abspath(path.dirname(__file__))
+        upload_path = path.join(basepath, 'static/uploads')
+        f.save(path.join(upload_path, secure_filename(f.filename)))
+        # 当上传成功，让url变成GET方法，相当于Post back
+        return redirect(url_for('upload'))  # 在flask服务端使用url_for不需要带‘.’
+    return render_template('upload.html')
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('404.html'), 404
 
 
 if __name__ == '__main__':
