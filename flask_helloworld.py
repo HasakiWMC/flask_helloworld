@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, redirect, url_for, make_respo
 from werkzeug.routing import BaseConverter
 from os import path
 from werkzeug.utils import secure_filename
+from flask.ext.script import Manager
 
 
 class RegexConverter(BaseConverter):
@@ -15,6 +16,8 @@ class RegexConverter(BaseConverter):
 
 app = Flask(__name__)
 app.url_map.converters['regex'] = RegexConverter
+
+manager = Manager(app)  # 用manager包装Flask
 
 
 @app.route('/')
@@ -83,5 +86,15 @@ def page_not_found(error):
     return render_template('404.html'), 404
 
 
+# 不需要F5自动刷新
+@manager.command
+def dev():
+    from livereload import Server
+    live_server = Server(app.wsgi_app)
+    live_server.watch('**/*.*')
+    live_server.serve(open_url=True)
+
+
 if __name__ == '__main__':
-    app.run(debug=True)  # 不需要重启服务
+    # app.run(debug=True)  # 不需要重启服务
+    manager.run()  # 在用ext时要用这个启动
