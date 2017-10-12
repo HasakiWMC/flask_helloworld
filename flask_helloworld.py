@@ -1,11 +1,12 @@
 #!usr/bin/env python
 # -*- coding:utf-8 _*-
 
-from flask import Flask, render_template, request, redirect, url_for, make_response, abort
+from flask import Flask, render_template, request, redirect, url_for, make_response, abort, json
 from werkzeug.routing import BaseConverter
 from os import path
 from werkzeug.utils import secure_filename
 from flask_script import Manager
+from flask_json import json_response, FlaskJSON, JsonTestResponse, as_json_p, as_json
 
 
 class RegexConverter(BaseConverter):
@@ -15,7 +16,9 @@ class RegexConverter(BaseConverter):
 
 
 app = Flask(__name__)
+flaskJson = FlaskJSON(app)
 app.url_map.converters['regex'] = RegexConverter
+
 
 # manager = Manager(app)  # 用manager包装Flask
 
@@ -48,6 +51,7 @@ def user(user_id):
 @app.route('/download/client/<regex(".*"):info>')
 def regex(info):
     return 'info = %s' % info
+
 
 @app.route('/download/client/<regex(".+\.tar$"):filename>')
 def regex2(filename):
@@ -83,6 +87,21 @@ def upload():
         # 当上传成功，让url变成GET方法，相当于Post back
         return redirect(url_for('upload'))  # 在flask服务端使用url_for不需要带‘.’
     return render_template('upload.html')
+
+
+@app.route('/dologin', methods=['POST'])
+def dologin():
+    print request.json
+    return json.dumps({"msg": 'post成功'})
+
+
+@app.route('/news', methods=['GET'])
+@as_json_p()
+def news():
+    # print request.json
+    # return json.dumps({"msg": 'post成功'})
+    data = ({"msg": 'post成功'})
+    return json_response(_data=data, headers_={'X-STATUS': 'ok'})
 
 
 @app.errorhandler(404)
