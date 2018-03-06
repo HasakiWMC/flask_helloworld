@@ -1,13 +1,11 @@
 #!usr/bin/env python
 # -*- coding:utf-8 _*-
-
 from flask import Flask, render_template, request, redirect, url_for, make_response, abort, json
 from werkzeug.routing import BaseConverter
 from os import path
 from werkzeug.utils import secure_filename
 from flask_script import Manager
 from flask_json import json_response, FlaskJSON, JsonTestResponse, as_json_p, as_json
-
 
 class RegexConverter(BaseConverter):
     def __init__(self, url_map, *items):
@@ -34,6 +32,7 @@ def index():
 
 @app.route('/services')
 def services():
+    print(request.headers)
     return 'Service'
 
 
@@ -91,7 +90,7 @@ def upload():
 
 @app.route('/dologin', methods=['POST'])
 def dologin():
-    print request.json
+    print(request.json)
     return json.dumps({"msg": 'post成功'})
 
 
@@ -102,6 +101,42 @@ def news():
     # return json.dumps({"msg": 'post成功'})
     data = ({"msg": 'post成功'})
     return json_response(_data=data, headers_={'X-STATUS': 'ok'})
+
+
+@app.route('/register', methods=['POST'])
+@as_json_p()
+def register():
+    print(request.json)
+    # return json.dumps({"msg": 'post成功'})
+    print(request.json.get(u'username'))
+    username = request.json.get(u'username')
+    passsword = request.json.get(u'password')
+    email = request.json.get(u'email')
+    res = ({"msg": '用户'})
+    import random
+    random_num = random.randint(0, 9)
+    print("random_num = " + str(random_num))
+    if random_num < 5:
+        trueOrFalse = True
+        msg = "用户注册成功"
+    else:
+        trueOrFalse = False
+        msg = "用户注册失败"
+    data = {
+        "email": email,
+        "id": 6,
+        "login_time": None,
+        "username": username
+    }
+    res = {
+        "data": data,
+        "msg": msg,
+        "status": trueOrFalse
+    }
+    return json_response(_data=res, headers_={'X-STATUS': 'ok'})
+
+
+
 
 
 @app.errorhandler(404)
